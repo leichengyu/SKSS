@@ -1,7 +1,8 @@
 #include <unistd.h>
+#include <poll.h>
+#include <memory.h>
 
 #include <eventloop.hpp>
-#include <common.hpp>
 
 skss::EventLoop::EventLoop(int setsize) : setsize(setsize),
                                           maxfd(-1),
@@ -107,3 +108,22 @@ int skss::EventLoop::Poll() {
     return retval;
 }
 
+int skss::EventLoop::Wait(int fd, int mask, long long milliseconds) {
+    struct pollfd pfd;
+    int retmask = 0, retval;
+
+    memset(&pfd, 0, sizeof(pfd));
+    pfd.fd = fd;
+    if (mask & skss::READABLE) pfd.events |= POLLIN;
+    if (mask & skss::WRITABLE) pfd.events |= POLLOUT;
+
+    if ((retval = poll(&pfd, 1, milliseconds)) == 1) {
+        if (pfd.revents & POLLIN) retmask |= skss::READABLE;
+        if (pfd.revents & POLLOUT) retmask |= skss::WRITABLE;
+        if (pfd.revents & POLLERR) retmask |= skss::WRITABLE;
+        if (pfd.revents & POLLHUP) retmask |= skss::WRITABLE;
+        return retmask;
+    } else {
+        return retval;
+    }
+}

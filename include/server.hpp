@@ -3,6 +3,7 @@
 
 #include <common.hpp>
 #include <eventloop.hpp>
+#include <eventcallback.hpp>
 
 namespace skss {
     class Server {
@@ -18,6 +19,8 @@ namespace skss {
         int sfd;
         int tcp_backlog;
         EventLoop eventloop;
+
+        AcceptTCPCallback acceptTCPCallback;
 
         void init();
 

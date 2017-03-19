@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(skss)
 
-option(USE_CLANG "build application with clang" ON) 
+option(USE_CLANG "build application with clang" ON)
 if(USE_CLANG)
     SET (CMAKE_C_COMPILER             "/usr/bin/clang")
 endif(USE_CLANG)

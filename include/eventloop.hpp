@@ -6,6 +6,11 @@
 #include <event.hpp>
 
 namespace skss {
+
+    class FileEvent;
+
+    class FiredEvent;
+
     class EventLoop {
     public:
         EventLoop(int setsize);
@@ -25,6 +30,8 @@ namespace skss {
         void stopLoop() { this->stop = true; }
 
         int Poll();
+
+        int Wait(int fd, int mask, long long milliseconds);
 
     private:
         int setsize;

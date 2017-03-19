@@ -1,6 +1,7 @@
 #ifndef EVENT_H_
 #define EVENT_H_
 
+#include <eventcallback.hpp>
 
 namespace skss {
 
@@ -10,12 +11,23 @@ namespace skss {
     public:
         Event();
 
-        ~Event();
+        virtual ~Event();
 
         void setEventLoop(EventLoop *eventloop) { eventloop = eventloop; }
 
+        void setReadCallback(EventCallback *callback) { this->read_callback = callback; }
+
+        void setWriteCallback(EventCallback *callback) { this->write_callback = callback; }
+
+        virtual void callRead(int fd, int mask, void *data);
+
+        virtual void callWrite(int fd, int mask, void *data);
+
+
     protected:
         EventLoop *eventloop;
+        EventCallback *read_callback;
+        EventCallback *write_callback;
     };
 
     class FileEvent : public Event {
