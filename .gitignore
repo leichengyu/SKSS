@@ -43,3 +43,5 @@ compile_commands.json
 CTestTestfile.cmake
 
 build/
+.idea/
+cmake-build-debug/
