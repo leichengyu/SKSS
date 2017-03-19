@@ -30,16 +30,32 @@ void skss::EventLoop::main() {
 
 void skss::EventLoop::beforeSleep() {}
 
-void skss::EventLoop::processEvents() {
+int skss::EventLoop::processEvents() {
     int processed = 0;
     int num_events = this->Poll();
     for (int j = 0; j < num_events; j++) {
-        FileEvent &fe = this->file_events[this->fired_events[j].getFd()];
+        int fd = this->fired_events[j].getFd();
+        FileEvent &fe = this->file_events[fd];
+        int mask = fe.getMask();
+        int rfired = 0;
+
+        if (fe.getMask() & mask & skss::READABLE) {
+            rfired = 1;
+            fe.callRead(fd, mask, nullptr);
+        }
+
+        if (fe.getMask() & mask & skss::WRITABLE) {
+            if (!rfired || fe.getReadCallback() != fe.getWriteCallback()) {
+                fe.callWrite(fd, mask, nullptr);
+            }
+        }
+        processed++;
     }
+    return processed;
 }
 
 
-int skss::EventLoop::createFileEvent(int fd, int mask, void *clientData) {
+int skss::EventLoop::createFileEvent(int fd, int mask, EventCallback *callback, void *clientData) {
     if (fd >= this->setsize) {
         return -1;
     }
@@ -47,7 +63,7 @@ int skss::EventLoop::createFileEvent(int fd, int mask, void *clientData) {
     FileEvent &event = this->file_events[fd];
 
     // if have mask, modify else add
-    int op = event.getMask() ? EPOLL_CTL_ADD : EPOLL_CTL_MOD;
+    int op = event.getMask() ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
     struct epoll_event ee = {0};
     ee.events = 0;
     mask |= event.getMask();
@@ -59,7 +75,9 @@ int skss::EventLoop::createFileEvent(int fd, int mask, void *clientData) {
     //set mask only if successfully epoll_ctl
     event.setMask(mask);
     event.setEventLoop(this);
-    //TODO: proc
+    if (mask & skss::READABLE) event.setReadCallback(callback);
+    if (mask & skss::WRITABLE) event.setWriteCallback(callback);
+    //TODO: client data
     this->maxfd = std::max(this->maxfd, fd);
     return 0;
 }

@@ -3,11 +3,11 @@
 
 #include <sys/epoll.h>
 #include <vector>
+
 #include <event.hpp>
+#include <eventcallback.hpp>
 
 namespace skss {
-
-    class FileEvent;
 
     class FiredEvent;
 
@@ -19,7 +19,7 @@ namespace skss {
 
         void main();
 
-        int createFileEvent(int fd, int mask, void *clientData);
+        int createFileEvent(int fd, int mask, EventCallback *callback, void *clientData);
 
         void deleteFileEvent(int fd, int delmask);
 
@@ -44,7 +44,7 @@ namespace skss {
 
         void beforeSleep();
 
-        void processEvents();
+        int processEvents();
     };
 };
 #endif

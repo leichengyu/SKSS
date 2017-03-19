@@ -11,7 +11,6 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
-#include <eventloop.hpp>
 #include <common.hpp>
 
 namespace skss {

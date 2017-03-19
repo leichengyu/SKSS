@@ -19,10 +19,13 @@ namespace skss {
 
         void setWriteCallback(EventCallback *callback) { this->write_callback = callback; }
 
+        EventCallback *getReadCallback() const { return this->read_callback; }
+
+        EventCallback *getWriteCallback() const { return this->write_callback; }
+
         virtual void callRead(int fd, int mask, void *data);
 
         virtual void callWrite(int fd, int mask, void *data);
-
 
     protected:
         EventLoop *eventloop;

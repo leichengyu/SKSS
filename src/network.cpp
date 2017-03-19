@@ -18,9 +18,10 @@ void skss::network::acceptTcpHandler(EventLoop *eventloop, int fd, int mask, voi
     while (max--) {
         cfd = tcpAccept(nullptr, fd, cip, sizeof(cip), &cport);
         if (errno != EWOULDBLOCK) {
-            std::cout << "Accept client connection: ";
+            std::cout << "Accept client connection: " << cfd << std::endl;
             return;
         }
+        std::cout << "Accept client and handle commandHandler " << cfd << std::endl;
         acceptCommandHandler(cfd, 0, cip);
     }
 }

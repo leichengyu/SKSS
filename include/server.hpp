@@ -16,7 +16,9 @@ namespace skss {
 
     private:
         int port;
+        //TODO: array of TCP fd
         int sfd;
+        //TODO: add unix socket here
         int tcp_backlog;
         EventLoop eventloop;
 

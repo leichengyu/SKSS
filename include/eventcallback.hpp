@@ -5,7 +5,6 @@
 #ifndef SKSS_EVENTCALLBACK_HPP_H
 #define SKSS_EVENTCALLBACK_HPP_H
 
-#include <event.hpp>
 #include <network.hpp>
 
 namespace skss {

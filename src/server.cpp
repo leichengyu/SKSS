@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cstring>
 #include <sys/socket.h>
-#include <sys/epoll.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -18,6 +17,7 @@ skss::Server::~Server() {
 void skss::Server::run() {
     this->init();
     std::cout << "Simple Key-Value Store Service run on port " << port << std::endl;
+    this->eventloop.main();
 }
 
 void skss::Server::init() {
@@ -36,6 +36,12 @@ void skss::Server::init() {
         std::cerr << "Error when listen to sfd" << std::endl;
         exit(-1);
     }
+
+    // now we listen to the port, then we poll from it
+    // 4. create an event, we listen to sfd, accept clients and have new events for each client
+    // We do not have client data now
+    // seems do not use EPOLLET why?
+    this->eventloop.createFileEvent(this->sfd, skss::READABLE, &this->acceptTCPCallback, nullptr);
 }
 
 int skss::Server::create_and_bind(const char *str_port) {
