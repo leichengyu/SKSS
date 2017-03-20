@@ -14,9 +14,11 @@ void skss::network::acceptTcpHandler(EventLoop *eventloop, int fd, int mask, voi
     char cip[skss::NET_IP_STR_LEN];
     while (max--) {
         cfd = tcpAccept(nullptr, fd, cip, sizeof(cip), &cport);
-        if (errno != EWOULDBLOCK) {
-            LOG(INFO) << "Accepting client connection: " << cfd;
-            return;
+        if (cfd == -1) {
+            if (errno != EWOULDBLOCK) {
+                LOG(ERROR) << "Accepting client connection: " << cfd << " error: " << strerror(errno);
+                return;
+            }
         }
         LOG(INFO) << "Accepted client, handle commandHandler " << cfd;
         acceptCommandHandler(cfd, 0, cip);
@@ -61,6 +63,7 @@ int skss::network::genericAccept(char *err, int s, struct sockaddr *sa, socklen_
 }
 
 int skss::network::acceptCommandHandler(int fd, int flags, char *ip) {
-    LOG(WARNING) << "accept command not implemented";
+    //TODO:
+    auto client = skss::Client::createInstance(fd, flags, ip);
     return 0;
 }

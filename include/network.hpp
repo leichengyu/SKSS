@@ -12,6 +12,7 @@
 #include <errno.h>
 
 #include <common.hpp>
+#include <client.hpp>
 
 namespace skss {
 
