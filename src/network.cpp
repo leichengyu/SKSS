@@ -4,10 +4,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <errno.h>
-#include <iostream>
 
 #include <network.hpp>
 
@@ -18,10 +15,10 @@ void skss::network::acceptTcpHandler(EventLoop *eventloop, int fd, int mask, voi
     while (max--) {
         cfd = tcpAccept(nullptr, fd, cip, sizeof(cip), &cport);
         if (errno != EWOULDBLOCK) {
-            std::cout << "Accept client connection: " << cfd << std::endl;
+            LOG(INFO) << "Accepting client connection: " << cfd;
             return;
         }
-        std::cout << "Accept client and handle commandHandler " << cfd << std::endl;
+        LOG(INFO) << "Accepted client, handle commandHandler " << cfd;
         acceptCommandHandler(cfd, 0, cip);
     }
 }
@@ -64,6 +61,6 @@ int skss::network::genericAccept(char *err, int s, struct sockaddr *sa, socklen_
 }
 
 int skss::network::acceptCommandHandler(int fd, int flags, char *ip) {
-    std::cerr << "will accept client command soon!" << std::endl;
+    LOG(WARNING) << "accept command not implemented";
     return 0;
 }
