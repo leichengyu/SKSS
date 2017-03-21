@@ -6,42 +6,49 @@
 
 #include <server.hpp>
 
-skss::Server::Server(int port) : port(port), eventloop(skss::CONFIG_DEFAULT_SETSIZE) {
-    this->tcp_backlog = skss::CONFIG_DEFAULT_TCP_BACKLOG;
-}
 
 skss::Server::~Server() {
 }
 
 void skss::Server::run() {
-    this->init();
     LOG(INFO) << "Simple Key-Value Store Service run on port " << this->port;
-    this->eventloop.main();
+    this->eventLoop->main();
 }
 
-void skss::Server::init() {
-    // now we have the port
-    LOG(INFO) << "Start init server";
-    // 1. create and bind
-    this->sfd = create_and_bind(std::to_string(this->port).c_str());
+void skss::Server::init(int port) {
+    //make sure only initialized once
+    this->mtx.lock();
+    if (!this->initialized) {
 
-    // 2. make socket non blocking
-    if (make_non_blocking(this->sfd) != 0) {
-        LOG(ERROR) << "Error when makeing non blocking";
-        exit(-1);
+        this->initialized = true;
+        this->port = port;
+        this->tcp_backlog = skss::CONFIG_DEFAULT_TCP_BACKLOG;
+        this->eventLoop = std::make_shared<skss::EventLoop>(skss::CONFIG_DEFAULT_SETSIZE);
+
+        // now we have the port
+        LOG(INFO) << "Start init server";
+        // 1. create and bind
+        this->sfd = create_and_bind(std::to_string(this->port).c_str());
+
+        // 2. make socket non blocking
+        if (make_non_blocking(this->sfd) != 0) {
+            LOG(ERROR) << "Error when makeing non blocking";
+            exit(-1);
+        }
+
+        // 3. listen
+        if (listen(this->sfd, this->tcp_backlog) != 0) {
+            LOG(ERROR) << "Error when listen to sfd";
+            exit(-1);
+        }
+
+        // now we listen to the port, then we poll from it
+        // 4. create an event, we listen to sfd, accept clients and have new events for each client
+        // We do not have client data now
+        // seems do not use EPOLLET why?
+        this->eventLoop->createFileEvent(this->sfd, skss::READABLE, &this->acceptTCPCallback, nullptr);
     }
-
-    // 3. listen
-    if (listen(this->sfd, this->tcp_backlog) != 0) {
-        LOG(ERROR) << "Error when listen to sfd";
-        exit(-1);
-    }
-
-    // now we listen to the port, then we poll from it
-    // 4. create an event, we listen to sfd, accept clients and have new events for each client
-    // We do not have client data now
-    // seems do not use EPOLLET why?
-    this->eventloop.createFileEvent(this->sfd, skss::READABLE, &this->acceptTCPCallback, nullptr);
+    mtx.unlock();
 }
 
 int skss::Server::create_and_bind(const char *str_port) {
@@ -90,3 +97,7 @@ int skss::Server::make_non_blocking(int sfd) {
     }
     return 0;
 }
+
+void skss::Server::clientDec() {this->num_client--;}
+void skss::Server::clientInc() {this->num_client++;}
+int skss::Server::getClientNumber() const {return num_client;}

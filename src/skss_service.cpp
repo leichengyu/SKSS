@@ -13,8 +13,9 @@ int main(int argc, char **argv) {
 
     int port = std::atoi(argv[1]);
 
-    skss::Server server(port);
-    server.run();
+
+    skss::Server::getInstance()->init(port);
+    skss::Server::getInstance()->run();
 
     return 0;
 }

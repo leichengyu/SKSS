@@ -9,8 +9,6 @@
 
 namespace skss {
 
-    class FiredEvent;
-
     class EventLoop {
     public:
         EventLoop(int setsize);

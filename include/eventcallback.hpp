@@ -20,6 +20,5 @@ namespace skss {
     public:
         virtual void operator()(EventLoop *eventloop, int fd, int mask, void *data);
     };
-
 };
 #endif //SKSS_EVENTCALLBACK_HPP_H

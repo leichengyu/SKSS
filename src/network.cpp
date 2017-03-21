@@ -65,5 +65,13 @@ int skss::network::genericAccept(char *err, int s, struct sockaddr *sa, socklen_
 int skss::network::acceptCommandHandler(int fd, int flags, char *ip) {
     //TODO:
     auto client = skss::Client::createInstance(fd, flags, ip);
+    if (!client) {
+        LOG(ERROR) << "create client error, fd = " << fd <<" error message: " << strerror(errno);
+        return -1;
+    }
+
+    //TODO: if set maxclient
+    //TODO: if set passwd
+    client->addFlags(flags);
     return 0;
 }
