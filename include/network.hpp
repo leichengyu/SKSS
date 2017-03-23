@@ -10,9 +10,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <memory>
 
 #include <common.hpp>
 #include <client.hpp>
+
 
 namespace skss {
 
@@ -20,7 +22,7 @@ namespace skss {
 
     namespace network {
 
-        void acceptTcpHandler(skss::EventLoop *eventloop, int fd, int mask, void *data);
+        void acceptTcpHandler(skss::EventLoop *eventloop, int fd, int mask, std::shared_ptr<Client> client);
 
         int tcpAccept(char *err, int s, char *ip, size_t ip_len, int *port);
 

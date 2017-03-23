@@ -3,6 +3,8 @@ PROJECT(skss)
 
 include(cmake/Modules/FindGlog.cmake)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 option(USE_CLANG "build application with clang" ON)
 if (USE_CLANG)
     SET(CMAKE_C_COMPILER "/usr/bin/clang")

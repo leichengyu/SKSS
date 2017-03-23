@@ -41,12 +41,12 @@ int skss::EventLoop::processEvents() {
 
         if (fe.getMask() & mask & skss::READABLE) {
             rfired = 1;
-            fe.callRead(fd, mask, nullptr);
+            fe.callRead(fd, mask, fe.getClient());
         }
 
         if (fe.getMask() & mask & skss::WRITABLE) {
             if (!rfired || fe.getReadCallback() != fe.getWriteCallback()) {
-                fe.callWrite(fd, mask, nullptr);
+                fe.callWrite(fd, mask, fe.getClient());
             }
         }
         processed++;
@@ -55,9 +55,9 @@ int skss::EventLoop::processEvents() {
 }
 
 
-int skss::EventLoop::createFileEvent(int fd, int mask, EventCallback *callback, void *clientData) {
+int skss::EventLoop::createFileEvent(int fd, int mask, EventCallback *callback, shared_ptr<Client> client) {
     if (fd >= this->setsize) {
-        return -1;
+        return SKSS_ERR;
     }
 
     FileEvent &event = this->file_events[fd];
@@ -71,15 +71,15 @@ int skss::EventLoop::createFileEvent(int fd, int mask, EventCallback *callback, 
     if (mask & skss::WRITABLE) ee.events |= EPOLLOUT;
     ee.data.fd = fd;
 
-    if (epoll_ctl(this->efd, op, fd, &ee) == -1) return -1;
+    if (epoll_ctl(this->efd, op, fd, &ee) == -1) return SKSS_ERR;
     //set mask only if successfully epoll_ctl
     event.setMask(mask);
     event.setEventLoop(this);
     if (mask & skss::READABLE) event.setReadCallback(callback);
     if (mask & skss::WRITABLE) event.setWriteCallback(callback);
-    //TODO: client data
+    event.setClient(std::move(client));
     this->maxfd = std::max(this->maxfd, fd);
-    return 0;
+    return SKSS_OK;
 }
 
 // delete a event, can delete only one mask or delete the event entirely
@@ -97,7 +97,9 @@ void skss::EventLoop::deleteFileEvent(int fd, int delmask) {
     ee.data.fd = fd;
 
     int op = mask ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
-    epoll_ctl(this->efd, op, fd, &ee);
+    if (epoll_ctl(this->efd, op, fd, &ee) == -1) {
+        LOG(ERROR) << "epoll_ctl op:" << op << " mask:" << mask;
+    };
 
     event.setMask(mask);
     if (fd == this->maxfd && !mask) {

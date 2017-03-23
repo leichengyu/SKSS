@@ -17,7 +17,7 @@ namespace skss {
 
         void main();
 
-        int createFileEvent(int fd, int mask, EventCallback *callback, void *clientData);
+        int createFileEvent(int fd, int mask, EventCallback *callback, std::shared_ptr<Client> client);
 
         void deleteFileEvent(int fd, int delmask);
 

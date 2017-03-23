@@ -12,18 +12,27 @@ namespace skss {
 
     class Client {
     public:
-        static std::unique_ptr<Client> createInstance(int fd, int flags,const char* ip) {
-            return std::unique_ptr<skss::Client>(new skss::Client(fd, flags, ip));
+        static std::shared_ptr<Client> createInstance(int fd, int flags, const char *ip) {
+            return std::shared_ptr<skss::Client>(new skss::Client(fd, flags, ip));
         }
+
         ~Client();
 
         void addFlags(int flags);
+
+        int getFd() const { return fd; }
+
+        inline std::string &getBuf() { return this->query_buf; }
+
+        void processInputBuffer();
 
     private:
         int fd;
         int flags;
         const std::string ip;
-        Client(int fd, int flags, const char* ip);
+        std::string query_buf;
+
+        Client(int fd, int flags, const char *ip);
     };
 };
 

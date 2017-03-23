@@ -5,7 +5,7 @@
 #include <client.hpp>
 #include <server.hpp>
 
-skss::Client::Client(int fd, int flags, const char* ip):fd(fd),flags(flags),ip(ip) {
+skss::Client::Client(int fd, int flags, const char *ip) : fd(fd), flags(flags), ip(ip) {
     skss::Server::getInstance()->clientInc();
 }
 
@@ -15,4 +15,8 @@ skss::Client::~Client() {
 
 void skss::Client::addFlags(int flags) {
     this->flags |= flags;
+}
+
+void skss::Client::processInputBuffer() {
+    LOG(WARNING) << this->query_buf;
 }

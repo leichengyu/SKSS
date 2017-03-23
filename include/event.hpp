@@ -1,6 +1,8 @@
 #ifndef EVENT_H_
 #define EVENT_H_
 
+#include <memory>
+
 #include <eventcallback.hpp>
 
 namespace skss {
@@ -23,9 +25,9 @@ namespace skss {
 
         EventCallback *getWriteCallback() const { return this->write_callback; }
 
-        virtual void callRead(int fd, int mask, void *data);
+        virtual void callRead(int fd, int mask, shared_ptr<Client> client);
 
-        virtual void callWrite(int fd, int mask, void *data);
+        virtual void callWrite(int fd, int mask, shared_ptr<Client> client);
 
     protected:
         EventLoop *eventloop;
@@ -43,8 +45,13 @@ namespace skss {
 
         inline void setMask(int mask) { this->mask = mask; }
 
+        inline void setClient(shared_ptr<Client> client) { this->client.swap(client); }
+
+        const shared_ptr<Client> &getClient() { return client; }
+
     private:
         int mask;
+        shared_ptr<Client> client;
     };
 
     class FiredEvent : public Event {

@@ -5,22 +5,24 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <memory>
 
 #include <network.hpp>
+#include <server.hpp>
 
-void skss::network::acceptTcpHandler(EventLoop *eventloop, int fd, int mask, void *data) {
+void skss::network::acceptTcpHandler(EventLoop *eventloop, int fd, int mask, shared_ptr<Client> client) {
     int max = skss::MAX_ACCEPTS_PER_CALL;
     int cfd, cport;
     char cip[skss::NET_IP_STR_LEN];
     while (max--) {
         cfd = tcpAccept(nullptr, fd, cip, sizeof(cip), &cport);
-        if (cfd == -1) {
+        if (cfd == SKSS_ERR) {
             if (errno != EWOULDBLOCK) {
                 LOG(ERROR) << "Accepting client connection: " << cfd << " error: " << strerror(errno);
-                return;
             }
+            return;
         }
-        LOG(INFO) << "Accepted client, handle commandHandler " << cfd;
+        LOG(INFO) << "Accepted client " << cip << ":" << cport;
         acceptCommandHandler(cfd, 0, cip);
     }
 }
@@ -30,7 +32,7 @@ int skss::network::tcpAccept(char *err, int s, char *ip, size_t ip_len, int *por
     struct sockaddr_storage sa;
     socklen_t salen = sizeof(sa);
     if ((fd = genericAccept(err, s, (struct sockaddr *) &sa, &salen)) == -1) {
-        return -1;
+        return SKSS_ERR;
     }
     if (sa.ss_family == AF_INET) {
         //ipv4
@@ -54,7 +56,7 @@ int skss::network::genericAccept(char *err, int s, struct sockaddr *sa, socklen_
             if (errno == EINTR) {
                 continue;
             } else {
-                return -1;
+                return SKSS_ERR;
             }
         }
         break;
@@ -66,12 +68,26 @@ int skss::network::acceptCommandHandler(int fd, int flags, char *ip) {
     //TODO:
     auto client = skss::Client::createInstance(fd, flags, ip);
     if (!client) {
-        LOG(ERROR) << "create client error, fd = " << fd <<" error message: " << strerror(errno);
-        return -1;
+        LOG(ERROR) << "create client error, fd = " << fd << " error message: " << strerror(errno);
+        return SKSS_ERR;
+    }
+
+    if (fd != -1) {
+        // make non-block
+        skss::net::setNonBlock(fd, 1);
+        //TODO: enable tcp no dealy
+        //create file event
+        if (Server::getInstance()->
+                getEventLoop()->
+                createFileEvent(fd, skss::READABLE, &skss::readQueryFromClientCallback, client) == SKSS_ERR) {
+            close(fd);
+            return SKSS_ERR;
+        }
     }
 
     //TODO: if set maxclient
     //TODO: if set passwd
     client->addFlags(flags);
-    return 0;
+    Server::getInstance()->addClient(client);
+    return SKSS_OK;
 }
