@@ -88,6 +88,7 @@ int skss::network::acceptCommandHandler(int fd, int flags, char *ip) {
     //TODO: if set maxclient
     //TODO: if set passwd
     client->addFlags(flags);
+    DLOG(INFO) << "client num: " << client.use_count();
     Server::getInstance()->addClient(client);
     return SKSS_OK;
 }

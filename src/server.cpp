@@ -45,12 +45,18 @@ void skss::Server::init(int port) {
         this->eventLoop->createFileEvent(this->sfd, skss::READABLE, &skss::acceptTCPCallback, nullptr);
     }
     this->clients.resize(skss::CONFIG_DEFAULT_SETSIZE);
+    this->eventLoop->addBeforeSleepCallback(std::bind(&Server::beforeSleep, this));
+    this->num_client = 0;
+    this->total_client = 0;
     mtx.unlock();
 }
 
 void skss::Server::clientDec() { this->num_client--; }
 
-void skss::Server::clientInc() { this->num_client++; }
+void skss::Server::clientInc() {
+    this->num_client++;
+    this->total_client++;
+}
 
 int skss::Server::getClientNumber() const { return num_client; }
 
@@ -69,6 +75,14 @@ void skss::Server::deleteClient(shared_ptr<Client> client) {
     //TODO: remove the callback?
     int fd = client->getFd();
     if (fd < 0 || fd >= skss::CONFIG_DEFAULT_MAX_CLIENTS) return;
+    DLOG(INFO) <<"client reference: " << this->clients[fd].use_count();
     this->clients[fd] = nullptr;
     this->eventLoop->deleteFileEvent(fd, skss::READABLE | skss::WRITABLE);
+    // Don't forget to close the fd
+    close(fd);
+}
+
+void skss::Server::beforeSleep() {
+   //TODO:
+    DLOG(INFO) << "clients: " << this->getClientNumber() << " total clients: " << this->total_client;
 }

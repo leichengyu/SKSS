@@ -3,6 +3,7 @@
 #include <memory.h>
 
 #include <eventloop.hpp>
+#include <server.hpp>
 
 skss::EventLoop::EventLoop(int setsize) : setsize(setsize),
                                           maxfd(-1),
@@ -28,7 +29,15 @@ void skss::EventLoop::main() {
     }
 }
 
-void skss::EventLoop::beforeSleep() {}
+void skss::EventLoop::beforeSleep() {
+    for (auto& f : this->beforeCallbacks) {
+        f();
+    }
+}
+
+void skss::EventLoop::addBeforeSleepCallback(std::function<void()> f) {
+    this->beforeCallbacks.push_back(f);
+}
 
 int skss::EventLoop::processEvents() {
     int processed = 0;
@@ -102,6 +111,9 @@ void skss::EventLoop::deleteFileEvent(int fd, int delmask) {
     };
 
     event.setMask(mask);
+    if (!mask) {
+        event.setClient(nullptr);
+    }
     if (fd == this->maxfd && !mask) {
         int j = fd;
         for (j = this->maxfd - 1; j >= 0; j--) {
@@ -111,6 +123,8 @@ void skss::EventLoop::deleteFileEvent(int fd, int delmask) {
     }
 }
 
+
+//TODO: add poll timeout
 int skss::EventLoop::Poll() {
     int retval = epoll_wait(this->efd, &this->epoll_events[0], this->setsize, -1);
     if (retval > 0) {

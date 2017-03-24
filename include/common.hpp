@@ -27,6 +27,8 @@ namespace skss {
     //========== IO =============
     const size_t PROTO_IOBUF_LEN = 1024 * 16;
     const size_t PROTO_MAX_QUERYBUF_LEN = 1024 * 1024 * 1024;
+    const size_t PROTO_INLINE_MAX_SIZE = 1024*64;
 };
+
 
 #endif

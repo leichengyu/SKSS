@@ -1,6 +1,5 @@
 #ifndef SERVER_H_
 #define SERVER_H_
-
 #include <list>
 #include <mutex>
 #include <memory>
@@ -57,8 +56,10 @@ namespace skss {
         //TODO: add unix socket here
         int tcp_backlog;
         int num_client;
+        int total_client;
         std::mutex mtx;
         vector<shared_ptr<Client>> clients;
+        void beforeSleep();
     };
 
 };
